@@ -1,0 +1,80 @@
+name: Rot Watch
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'   # First day of each month, 06:00 UTC
+  workflow_dispatch:        # Manual trigger for testing
+
+jobs:
+  rot-check:
+    runs-on: ubuntu-22.04
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run self-tests for each blueprint
+        id: rot
+        run: |
+          FAILED=""
+          for dir in blueprints/*/; do
+            slug=$(basename "$dir")
+            if [ ! -f "$dir/rot-test.sh" ]; then
+              echo "::notice::$slug — no rot-test.sh, skipping"
+              continue
+            fi
+            echo "::group::Testing $slug"
+            if bash "$dir/rot-test.sh"; then
+              echo "PASSED: $slug"
+            else
+              echo "::warning::FAILED: $slug"
+              FAILED="$FAILED,$slug"
+            fi
+            echo "::endgroup::"
+          done
+          # Strip leading comma
+          FAILED="${FAILED#,}"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+
+      - name: Open stale-blueprint issues
+        if: steps.rot.outputs.failed != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failed = '${{ steps.rot.outputs.failed }}'.split(',').filter(Boolean)
+            for (const slug of failed) {
+              // Check if a stale issue is already open for this slug
+              const { data: existing } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: 'stale-blueprint',
+                state: 'open',
+              })
+              const alreadyOpen = existing.some(i => i.title.includes(slug))
+              if (alreadyOpen) {
+                console.log(`Issue already open for ${slug} — skipping`)
+                continue
+              }
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `stale-blueprint: ${slug}`,
+                labels: ['stale-blueprint'],
+                body: [
+                  `## Rot Watch failure: \`${slug}\``,
+                  '',
+                  `The monthly self-test for **${slug}** failed.`,
+                  '',
+                  `**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`,
+                  '',
+                  '**Next steps:**',
+                  '1. Investigate which install steps are failing',
+                  '2. Run `blueprintforge refresh ' + slug + '` to update the blueprint',
+                  '3. Close this issue once the refresh is published',
+                ].join('\n'),
+              })
+              console.log(`Opened stale-blueprint issue for ${slug}`)
+            }
