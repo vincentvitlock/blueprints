@@ -1,14 +1,18 @@
 # Blueprints
 
-AI-assisted build blueprints — reusable skills, agents, and workflows for Claude Code.
+A collection of tested, versioned build blueprints.
 
-## Contents
+Each blueprint walks through setting up a tool, system, or workflow — with every install step verified, a sandbox self-test, and a real-environment build check before publication.
 
-| Blueprint | Description |
-|---|---|
-| [`build-ledger/`](./build-ledger/) | SOX-grade audit trails for AI-assisted build sessions |
-| [`youtube-transcript-pipeline/`](./youtube-transcript-pipeline/) | Download YouTube auto-captions as searchable Markdown files |
+## Browse
 
----
+See the [full catalogue](https://vincentvitlock.github.io/Blueprints/).
 
-Each blueprint ships as a self-contained folder with a `SKILL.md` entry point, supporting agents, templates, and references.
+## Download
+
+Each blueprint is available as a versioned zip from the [Releases](https://github.com/vincentvitlock/Blueprints/releases) page — download a specific version and it won't change under you.
+
+## Licensing
+
+- Code, scripts, and config templates: MIT — see `LICENSE`
+- Prose documentation (Strategic Guides): CC BY 4.0 — see `LICENSE-DOCS`

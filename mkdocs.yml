@@ -1,0 +1,14 @@
+site_name: Blueprints
+site_url: https://vincentvitlock.github.io/Blueprints/
+repo_url: https://github.com/vincentvitlock/Blueprints
+theme:
+  name: material
+  palette:
+    primary: indigo
+
+nav:
+  - Home: index.md
+
+plugins:
+  - search
+  - tags
